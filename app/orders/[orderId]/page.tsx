@@ -8,33 +8,26 @@ import { api, OrderDto, getUser, money } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function OrderDetailPage() {
-  const params = useParams();
+  const params = useParams<{ orderId: string }>();
   const router = useRouter();
-
-  const orderId = params.orderId as string;
-
   const [order, setOrder] = useState<OrderDto | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!orderId) return;
-
     const u = getUser();
-
     if (!u || u.role !== "User") {
       router.push("/login");
       return;
     }
 
-    api
-      .get(`/api/orders/${orderId}`)
+    api.get(`/api/orders/${params.orderId}`)
       .then((res) => setOrder(res.data))
       .catch(() => {
         toast.error("Order not found.");
         router.push("/orders");
       })
       .finally(() => setLoading(false));
-  }, [orderId, router]);
+  }, [params.orderId, router]);
 
   if (loading) {
     return (
@@ -64,7 +57,6 @@ export default function OrderDetailPage() {
           <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-100 text-teal-700">
             <ReceiptText size={26} />
           </span>
-
           <div>
             <p className="eyebrow">Order detail</p>
             <h1 className="mt-1 text-3xl font-black text-slate-950">
@@ -75,7 +67,6 @@ export default function OrderDetailPage() {
             </p>
           </div>
         </div>
-
         <div className="text-left sm:text-right">
           <span className="status-badge bg-amber-100 text-amber-700">
             {order.status}
@@ -96,7 +87,6 @@ export default function OrderDetailPage() {
               <th className="text-right">Subtotal</th>
             </tr>
           </thead>
-
           <tbody>
             {order.items.map((item) => (
               <tr key={item.orderItemId}>
@@ -111,7 +101,6 @@ export default function OrderDetailPage() {
               </tr>
             ))}
           </tbody>
-
           <tfoot className="bg-slate-50">
             <tr>
               <td colSpan={3} className="px-4 py-4 text-right font-black">

@@ -28,6 +28,7 @@ export type Product = {
   imageUrl?: string;
   categoryId: number;
   categoryName?: string;
+  accountId?: number;
   isActive: boolean;
   createdDate: string;
   modifiedDate?: string;

@@ -1,7 +1,9 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { api, setUser } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -32,27 +34,53 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-sm mt-16">
-      <h1 className="text-2xl font-bold mb-2">Admin Login</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        Regular user? <Link href="/login" className="text-blue-600 hover:underline">Login here</Link>
-      </p>
-      <form onSubmit={submit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Email</label>
-          <input type="email" className="w-full border rounded px-3 py-2" required value={form.email}
-            onChange={e => setForm({ ...form, email: e.target.value })} />
+    <div className="mx-auto mt-10 max-w-md">
+      <div className="card">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-lg shadow-slate-900/20">
+            <ShieldCheck size={24} />
+          </div>
+          <p className="eyebrow">Admin area</p>
+          <h1 className="mt-2 text-3xl font-black text-slate-950">
+            Admin login
+          </h1>
+          <p className="muted mt-2">
+            Regular user?{" "}
+            <Link href="/login" className="font-semibold text-teal-700 hover:text-teal-800">
+              Login here
+            </Link>
+          </p>
         </div>
+
+        <form onSubmit={submit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Password</label>
-          <input type="password" className="w-full border rounded px-3 py-2" required value={form.password}
-            onChange={e => setForm({ ...form, password: e.target.value })} />
+          <label className="label">Email</label>
+          <input
+            type="email"
+            className="input"
+            required
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
         </div>
-        <button type="submit" disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50">
+
+        <div>
+          <label className="label">Password</label>
+          <input
+            type="password"
+            className="input"
+            required
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
+        </div>
+
+        <button type="submit" disabled={loading} className="btn-primary w-full">
+          <ShieldCheck size={18} />
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      </div>
     </div>
   );
 }

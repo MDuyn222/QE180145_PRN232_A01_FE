@@ -4,6 +4,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api, Category, Product } from "@/lib/api";
 import ProductCard from "@/components/ProductCard";
+import { Filter, PackageSearch, Search } from "lucide-react";
 
 export default function Page() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -66,72 +67,103 @@ export default function Page() {
 
   return (
     <>
-      <h1 className="mb-6 text-3xl font-bold">Search products</h1>
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Product discovery</p>
+          <h1 className="section-title mt-2">Search products</h1>
+          <p className="muted mt-2">
+            Filter by name, price range, or category to find the right item.
+          </p>
+        </div>
+      </div>
 
       <form
         onSubmit={handleSearch}
-        className="card mb-8 grid gap-3 md:grid-cols-5"
+        className="card mb-8 grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr_auto]"
       >
-        <input
-          name="name"
-          className="input"
-          placeholder="Product name"
-        />
+        <div>
+          <label className="label">Product name</label>
+          <input name="name" className="input" placeholder="Search by name" />
+        </div>
 
-        <input
-          name="minPrice"
-          type="number"
-          min="0"
-          className="input"
-          placeholder="Min price"
-        />
+        <div>
+          <label className="label">Min price</label>
+          <input
+            name="minPrice"
+            type="number"
+            min="0"
+            className="input"
+            placeholder="0"
+          />
+        </div>
 
-        <input
-          name="maxPrice"
-          type="number"
-          min="0"
-          className="input"
-          placeholder="Max price"
-        />
+        <div>
+          <label className="label">Max price</label>
+          <input
+            name="maxPrice"
+            type="number"
+            min="0"
+            className="input"
+            placeholder="Any"
+          />
+        </div>
 
-        <select
-          name="categoryId"
-          className="input"
-          disabled={loadingCategories}
-        >
-          <option value="">
-            {loadingCategories ? "Loading categories..." : "All categories"}
-          </option>
-
-          {categories.map((category) => (
-            <option
-              key={category.categoryId}
-              value={category.categoryId}
-            >
-              {category.categoryName}
+        <div>
+          <label className="label">Category</label>
+          <select
+            name="categoryId"
+            className="input"
+            disabled={loadingCategories}
+          >
+            <option value="">
+              {loadingCategories ? "Loading categories..." : "All categories"}
             </option>
-          ))}
-        </select>
+
+            {categories.map((category) => (
+              <option key={category.categoryId} value={category.categoryId}>
+                {category.categoryName}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <button
           type="submit"
-          className="btn-primary"
+          className="btn-primary self-end"
           disabled={searching}
         >
-          {searching ? "Searching..." : "Search"}
+          {searching ? (
+            <>
+              <Filter size={18} />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search size={18} />
+              Search
+            </>
+          )}
         </button>
       </form>
 
       {error && (
-        <div className="mb-6 rounded-xl border border-red-300 bg-red-50 p-4 text-red-700">
+        <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
           {error}
         </div>
       )}
 
       {!searching && !error && products.length === 0 && (
-        <p className="text-slate-600">
-          Enter search criteria and click Search.
-        </p>
+        <div className="soft-card flex flex-col items-center justify-center py-14 text-center">
+          <div className="mb-4 rounded-2xl bg-teal-100 p-4 text-teal-700">
+            <PackageSearch size={30} />
+          </div>
+          <h2 className="text-lg font-bold text-slate-950">
+            Ready when you are
+          </h2>
+          <p className="muted mt-2">
+            Enter search criteria and click Search to view matching products.
+          </p>
+        </div>
       )}
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -145,4 +177,3 @@ export default function Page() {
     </>
   );
 }
-

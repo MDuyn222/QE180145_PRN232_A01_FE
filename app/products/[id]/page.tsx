@@ -3,52 +3,41 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Minus, Package, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Minus, Package, Plus, ShieldCheck, ShoppingCart } from "lucide-react";
 import { api, Product, getUser, money } from "@/lib/api";
 import { toast } from "sonner";
 
 export default function ProductDetailPage() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
-
-  const id = params.id as string;
-
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
-
-    api
-      .get(`/api/products/${id}`)
+    api.get(`/api/products/${params.id}`)
       .then((res) => setProduct(res.data))
       .catch(() => {
         toast.error("Product not found.");
         router.push("/");
       })
       .finally(() => setLoading(false));
-  }, [id, router]);
+  }, [params.id, router]);
 
   const addToCart = async () => {
     const u = getUser();
-
     if (!u || u.role !== "User") {
       router.push("/login");
       return;
     }
 
-    if (!product) return;
-
     setAdding(true);
-
     try {
       await api.post("/api/cart/items", {
-        productId: product.productId,
+        productId: product!.productId,
         quantity: qty,
       });
-
       toast.success("Added to cart!");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Failed to add to cart.");
@@ -89,8 +78,8 @@ export default function ProductDetailPage() {
         Back to shop
       </Link>
 
-      <div className="card grid gap-8 p-5 md:grid-cols-2 md:p-8">
-        <div className="overflow-hidden rounded-3xl bg-slate-100">
+      <div className="glass-panel grid gap-8 p-5 md:grid-cols-2 md:p-8">
+        <div className="overflow-hidden rounded-3xl bg-slate-100 shadow-inner">
           <img
             src={imageUrl}
             alt={product.productName}
@@ -115,17 +104,34 @@ export default function ProductDetailPage() {
             </p>
           )}
 
-          <p className="mt-6 text-4xl font-black text-teal-700">
-            {money(product.price)}
-          </p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-2xl bg-teal-50 p-4">
+              <p className="text-xs font-bold uppercase text-teal-700">
+                Price
+              </p>
+              <p className="mt-1 text-3xl font-black text-teal-800">
+                {money(product.price)}
+              </p>
+            </div>
 
-          <p className="mt-3 inline-flex w-fit items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600">
-            <Package size={16} />
-            {product.stockQuantity > 0 ? (
-              `${product.stockQuantity} in stock`
-            ) : (
-              <span className="text-rose-600">Out of stock</span>
-            )}
+            <div className="rounded-2xl bg-slate-50 p-4">
+              <p className="inline-flex items-center gap-2 text-xs font-bold uppercase text-slate-500">
+                <Package size={15} />
+                Stock
+              </p>
+              <p className="mt-2 text-lg font-black text-slate-900">
+                {product.stockQuantity > 0 ? (
+                  `${product.stockQuantity} in stock`
+                ) : (
+                  <span className="text-rose-600">Out of stock</span>
+                )}
+              </p>
+            </div>
+          </div>
+
+          <p className="mt-4 inline-flex w-fit items-center gap-2 rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-600 shadow-sm">
+            <ShieldCheck size={16} className="text-teal-600" />
+            Verified product information
           </p>
 
           {product.stockQuantity > 0 && (
@@ -138,11 +144,9 @@ export default function ProductDetailPage() {
                 >
                   <Minus size={18} />
                 </button>
-
                 <span className="min-w-14 border-x border-slate-200 px-5 py-3 text-center font-bold">
                   {qty}
                 </span>
-
                 <button
                   onClick={() =>
                     setQty((q) => Math.min(product.stockQuantity, q + 1))
@@ -167,10 +171,7 @@ export default function ProductDetailPage() {
 
           {!getUser() && (
             <p className="mt-4 text-sm text-slate-500">
-              <Link
-                href="/login"
-                className="font-semibold text-teal-700 hover:text-teal-800"
-              >
+              <Link href="/login" className="font-semibold text-teal-700 hover:text-teal-800">
                 Login
               </Link>{" "}
               to add this item to your cart.

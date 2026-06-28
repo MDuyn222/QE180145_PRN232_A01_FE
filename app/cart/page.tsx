@@ -1,7 +1,9 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ArrowRight, Minus, PackageOpen, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { api, CartDto, getUser, money } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -25,7 +27,10 @@ export default function CartPage() {
 
   useEffect(() => {
     const u = getUser();
-    if (!u || u.role !== "User") { router.push("/login"); return; }
+    if (!u || u.role !== "User") {
+      router.push("/login");
+      return;
+    }
     load();
   }, []);
 
@@ -63,48 +68,123 @@ export default function CartPage() {
     }
   };
 
-  if (loading) return <div className="py-16 text-center">Loading cart...</div>;
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-4xl">
+        <div className="card animate-pulse">
+          <div className="h-8 w-48 rounded bg-slate-200" />
+          <div className="mt-6 space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="h-24 rounded-2xl bg-slate-100" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!cart || cart.items.length === 0)
     return (
-      <div className="py-16 text-center">
-        <p className="text-gray-500 mb-4">Your cart is empty.</p>
-        <Link href="/" className="text-blue-600 hover:underline">Continue Shopping</Link>
+      <div className="soft-card mx-auto flex max-w-2xl flex-col items-center py-16 text-center">
+        <div className="mb-4 rounded-2xl bg-teal-100 p-4 text-teal-700">
+          <PackageOpen size={32} />
+        </div>
+        <h1 className="text-2xl font-black text-slate-950">
+          Your cart is empty
+        </h1>
+        <p className="muted mt-2">
+          Add products to your cart and they will appear here.
+        </p>
+        <Link href="/" className="btn-primary mt-6">
+          Continue shopping
+          <ArrowRight size={18} />
+        </Link>
       </div>
     );
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
+    <div className="mx-auto max-w-4xl">
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Checkout</p>
+          <h1 className="section-title mt-2">Shopping cart</h1>
+          <p className="muted mt-2">
+            Review quantities before placing your order.
+          </p>
+        </div>
+      </div>
+
       <div className="space-y-4">
-        {cart.items.map(item => (
-          <div key={item.cartItemId} className="flex items-center gap-4 border rounded-lg p-4">
+        {cart.items.map((item) => (
+          <div
+            key={item.cartItemId}
+            className="card grid gap-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+          >
             {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.productName} className="w-20 h-20 object-cover rounded" />
+              <img
+                src={item.imageUrl}
+                alt={item.productName}
+                className="h-24 w-24 rounded-2xl object-cover"
+              />
             )}
+
             <div className="flex-1">
-              <p className="font-semibold">{item.productName}</p>
-              <p className="text-blue-600">{money(item.price)}</p>
+              <p className="text-lg font-bold text-slate-950">
+                {item.productName}
+              </p>
+              <p className="mt-1 font-semibold text-teal-700">
+                {money(item.price)}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => updateQty(item.cartItemId, item.quantity - 1)}
-                disabled={item.quantity <= 1}
-                className="w-8 h-8 border rounded text-center disabled:opacity-30">−</button>
-              <span className="w-8 text-center">{item.quantity}</span>
-              <button onClick={() => updateQty(item.cartItemId, item.quantity + 1)}
-                className="w-8 h-8 border rounded text-center">+</button>
+
+            <div className="flex flex-wrap items-center justify-between gap-4 sm:justify-end">
+              <div className="flex items-center overflow-hidden rounded-xl border border-slate-200 bg-white">
+                <button
+                  onClick={() => updateQty(item.cartItemId, item.quantity - 1)}
+                  disabled={item.quantity <= 1}
+                  className="p-2.5 text-slate-600 hover:bg-slate-50 disabled:opacity-30"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus size={16} />
+                </button>
+                <span className="min-w-12 border-x border-slate-200 px-4 py-2 text-center font-bold">
+                  {item.quantity}
+                </span>
+                <button
+                  onClick={() => updateQty(item.cartItemId, item.quantity + 1)}
+                  className="p-2.5 text-slate-600 hover:bg-slate-50"
+                  aria-label="Increase quantity"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+
+              <p className="min-w-28 text-right text-lg font-black text-slate-950">
+                {money(item.subtotal)}
+              </p>
+
+              <button
+                onClick={() => remove(item.cartItemId)}
+                className="rounded-xl p-2.5 text-rose-600 hover:bg-rose-50"
+                aria-label="Remove item"
+              >
+                <Trash2 size={18} />
+              </button>
             </div>
-            <p className="font-semibold w-28 text-right">{money(item.subtotal)}</p>
-            <button onClick={() => remove(item.cartItemId)}
-              className="text-red-500 hover:text-red-700 ml-2">✕</button>
           </div>
         ))}
       </div>
-      <div className="mt-6 border-t pt-4 flex items-center justify-between">
+
+      <div className="card mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-lg font-bold">Total: {money(cart.total)}</p>
+          <p className="text-sm font-semibold text-slate-500">Cart total</p>
+          <p className="mt-1 text-3xl font-black text-teal-700">
+            {money(cart.total)}
+          </p>
         </div>
-        <button onClick={checkout} disabled={checkingOut}
-          className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50">
+
+        <button onClick={checkout} disabled={checkingOut} className="btn-primary">
+          <ShoppingBag size={18} />
           {checkingOut ? "Processing..." : "Place Order"}
         </button>
       </div>

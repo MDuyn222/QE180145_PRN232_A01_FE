@@ -16,7 +16,7 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      router.replace("/admin/login");
+      router.replace("/login");
       return;
     }
 
@@ -24,7 +24,12 @@ export default function AdminGuard({ children }: { children: ReactNode }) {
   }, [pathname, router]);
 
   if (!ready) {
-    return <div className="py-16 text-center">Checking authentication...</div>;
+    return (
+      <div className="soft-card mx-auto mt-10 max-w-md py-12 text-center">
+        <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-full bg-teal-100" />
+        <p className="font-semibold text-slate-700">Checking authentication...</p>
+      </div>
+    );
   }
 
   return <>{children}</>;

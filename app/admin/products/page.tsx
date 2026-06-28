@@ -4,6 +4,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import { api, Category, Product, money } from "@/lib/api";
 import { toast } from "sonner";
 import Modal from "@/components/admin/Modal";
+import { Edit3, PackagePlus, Trash2 } from "lucide-react";
 
 export default function ProductManagementPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -92,31 +93,70 @@ export default function ProductManagementPage() {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold">Product management</h1>
-        <button onClick={openCreate} className="btn-primary">Create product</button>
+      <div className="page-header">
+        <div>
+          <p className="eyebrow">Store inventory</p>
+          <h1 className="section-title mt-2">Product management</h1>
+          <p className="muted mt-2">
+            Create products, assign categories, and control active listings.
+          </p>
+        </div>
+        <button onClick={openCreate} className="btn-primary">
+          <PackagePlus size={18} />
+          Create product
+        </button>
       </div>
 
-      <div className="card overflow-x-auto">
+      <div className="table-wrap">
         {loading ? (
           <p className="py-8 text-center">Loading products...</p>
         ) : (
-          <table className="w-full min-w-[850px]">
+          <table className="data-table min-w-[900px]">
             <thead>
-              <tr className="text-left">
-                <th className="pb-3">Name</th><th className="pb-3">Category</th><th className="pb-3">Price</th>
-                <th className="pb-3">Stock</th><th className="pb-3">Status</th><th className="pb-3">Actions</th>
+              <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {products.map((product) => (
-                <tr className="border-t" key={product.productId}>
-                  <td className="py-3 font-medium">{product.productName}</td>
-                  <td>{product.categoryName}</td><td>{money(product.price)}</td><td>{product.stockQuantity}</td>
-                  <td>{product.isActive ? "Active" : "Inactive"}</td>
+                <tr key={product.productId}>
+                  <td className="font-bold text-slate-950">
+                    {product.productName}
+                  </td>
+                  <td>{product.categoryName}</td>
+                  <td className="font-bold text-teal-700">{money(product.price)}</td>
+                  <td>{product.stockQuantity}</td>
                   <td>
-                    <button onClick={() => openEdit(product)} className="mr-4 text-blue-600">Edit</button>
-                    <button onClick={() => remove(product)} className="text-red-600">Delete</button>
+                    <span
+                      className={`status-badge ${
+                        product.isActive ? "status-active" : "status-muted"
+                      }`}
+                    >
+                      {product.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => openEdit(product)}
+                        className="btn-secondary px-3 py-2"
+                      >
+                        <Edit3 size={15} />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => remove(product)}
+                        className="rounded-xl px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                      >
+                        <Trash2 size={15} className="inline" />
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -128,14 +168,44 @@ export default function ProductManagementPage() {
       {modalOpen && (
         <Modal title={editing ? "Edit product" : "Create product"} onClose={() => setModalOpen(false)}>
           <form onSubmit={save} className="grid gap-4 md:grid-cols-2">
-            <div><label className="mb-1 block font-medium">Product name</label><input name="name" className="input" maxLength={200} defaultValue={editing?.productName ?? ""} required /></div>
-            <div><label className="mb-1 block font-medium">Category</label><select name="category" className="input" defaultValue={editing?.categoryId ?? ""} required><option value="">Select category</option>{categories.map((category) => <option key={category.categoryId} value={category.categoryId}>{category.categoryName}</option>)}</select></div>
-            <div><label className="mb-1 block font-medium">Price</label><input name="price" type="number" min="0" step="0.01" className="input" defaultValue={editing?.price ?? 0} required /></div>
-            <div><label className="mb-1 block font-medium">Stock quantity</label><input name="stock" type="number" min="0" className="input" defaultValue={editing?.stockQuantity ?? 0} required /></div>
-            <div className="md:col-span-2"><label className="mb-1 block font-medium">Image URL</label><input name="image" type="url" maxLength={500} className="input" defaultValue={editing?.imageUrl ?? ""} /></div>
-            <div className="md:col-span-2"><label className="mb-1 block font-medium">Description</label><textarea name="description" className="input min-h-28" defaultValue={editing?.description ?? ""} /></div>
-            <label className="flex items-center gap-2"><input name="active" type="checkbox" defaultChecked={editing?.isActive ?? true} /> Active</label>
-            <div className="flex justify-end gap-3 md:col-span-2"><button type="button" className="rounded-xl border px-4 py-2" onClick={() => setModalOpen(false)}>Cancel</button><button className="btn-primary" disabled={saving}>{saving ? "Saving..." : "Save"}</button></div>
+            <div>
+              <label className="label">Product name</label>
+              <input name="name" className="input" maxLength={200} defaultValue={editing?.productName ?? ""} required />
+            </div>
+            <div>
+              <label className="label">Category</label>
+              <select name="category" className="input" defaultValue={editing?.categoryId ?? ""} required>
+                <option value="">Select category</option>
+                {categories.map((category) => (
+                  <option key={category.categoryId} value={category.categoryId}>
+                    {category.categoryName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="label">Price</label>
+              <input name="price" type="number" min="0" step="0.01" className="input" defaultValue={editing?.price ?? 0} required />
+            </div>
+            <div>
+              <label className="label">Stock quantity</label>
+              <input name="stock" type="number" min="0" className="input" defaultValue={editing?.stockQuantity ?? 0} required />
+            </div>
+            <div className="md:col-span-2">
+              <label className="label">Image URL</label>
+              <input name="image" type="url" maxLength={500} className="input" defaultValue={editing?.imageUrl ?? ""} />
+            </div>
+            <div className="md:col-span-2">
+              <label className="label">Description</label>
+              <textarea name="description" className="input min-h-28" defaultValue={editing?.description ?? ""} />
+            </div>
+            <label className="flex items-center gap-2 rounded-xl bg-slate-50 p-3 text-sm font-semibold text-slate-700">
+              <input name="active" type="checkbox" defaultChecked={editing?.isActive ?? true} className="h-4 w-4 accent-teal-600" /> Active
+            </label>
+            <div className="flex justify-end gap-3 md:col-span-2">
+              <button type="button" className="btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
+              <button className="btn-primary" disabled={saving}>{saving ? "Saving..." : "Save"}</button>
+            </div>
           </form>
         </Modal>
       )}
