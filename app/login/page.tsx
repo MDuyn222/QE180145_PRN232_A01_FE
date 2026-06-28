@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api, setUser } from "@/lib/api";
 import { toast } from "sonner";
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
@@ -16,14 +16,10 @@ export default function AdminLoginPage() {
     try {
       const res = await api.post("/api/auth/login", form);
       const data = res.data;
-      if (data.role !== "Admin") {
-        toast.error("Access denied. Admin credentials required.");
-        return;
-      }
-      setUser({ token: data.token, role: data.role, email: data.email, fullName: data.fullName });
+      setUser({ token: data.token, role: data.role, email: data.email, fullName: data.fullName, accountId: data.accountId });
       window.dispatchEvent(new Event("storage"));
-      toast.success("Welcome, Admin!");
-      router.push("/admin");
+      toast.success(`Welcome back, ${data.fullName || data.email}!`);
+      router.push(data.role === "Admin" ? "/admin" : "/");
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Login failed.");
     } finally {
@@ -32,11 +28,8 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="mx-auto max-w-sm mt-16">
-      <h1 className="text-2xl font-bold mb-2">Admin Login</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        Regular user? <Link href="/login" className="text-blue-600 hover:underline">Login here</Link>
-      </p>
+    <div className="mx-auto max-w-md mt-16">
+      <h1 className="text-2xl font-bold mb-6">Login</h1>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-1">Email</label>
@@ -53,6 +46,7 @@ export default function AdminLoginPage() {
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
+      <p className="mt-4 text-center text-sm">Don&apos;t have an account? <Link href="/register" className="text-blue-600 hover:underline">Register</Link></p>
     </div>
   );
 }
