@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
@@ -12,23 +11,33 @@ export default function Page() {
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadInitialData = async () => {
       try {
         setLoadingCategories(true);
+        setSearching(true);
+        setError("");
 
-        const response = await api.get<Category[]>("/api/categories");
-        setCategories(response.data);
+        const [categoryResponse, productResponse] = await Promise.all([
+          api.get<Category[]>("/api/categories"),
+          api.get<Product[]>("/api/products/search"),
+        ]);
+
+        setCategories(categoryResponse.data);
+        setProducts(productResponse.data);
       } catch (err) {
-        console.error("Failed to load categories:", err);
-        setError("Không thể tải danh sách danh mục.");
+        console.error("Failed to load search page data:", err);
+        setError("Không thể tải danh sách sản phẩm. Vui lòng kiểm tra backend.");
+        setProducts([]);
       } finally {
         setLoadingCategories(false);
+        setSearching(false);
       }
     };
 
-    loadCategories();
+    loadInitialData();
   }, []);
 
   const handleSearch = async (event: FormEvent<HTMLFormElement>) => {
@@ -36,6 +45,7 @@ export default function Page() {
 
     try {
       setSearching(true);
+      setHasSearched(true);
       setError("");
 
       const formData = new FormData(event.currentTarget);
@@ -72,7 +82,7 @@ export default function Page() {
           <p className="eyebrow">Product discovery</p>
           <h1 className="section-title mt-2">Search products</h1>
           <p className="muted mt-2">
-            Filter by name, price range, or category to find the right item.
+            Browse all available products or filter by name, price range, and category.
           </p>
         </div>
       </div>
@@ -135,7 +145,7 @@ export default function Page() {
           {searching ? (
             <>
               <Filter size={18} />
-              Searching...
+              Loading...
             </>
           ) : (
             <>
@@ -152,28 +162,44 @@ export default function Page() {
         </div>
       )}
 
+      {searching && (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {[1, 2, 3, 4, 5, 6].map((item) => (
+            <div key={item} className="card animate-pulse p-0">
+              <div className="aspect-[4/3] rounded-t-[1.4rem] bg-slate-200" />
+              <div className="p-5">
+                <div className="h-5 w-3/4 rounded bg-slate-200" />
+                <div className="mt-3 h-4 rounded bg-slate-200" />
+                <div className="mt-6 h-6 w-1/2 rounded bg-slate-200" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {!searching && !error && products.length === 0 && (
         <div className="soft-card flex flex-col items-center justify-center py-14 text-center">
           <div className="mb-4 rounded-2xl bg-teal-100 p-4 text-teal-700">
             <PackageSearch size={30} />
           </div>
           <h2 className="text-lg font-bold text-slate-950">
-            Ready when you are
+            {hasSearched ? "No matching products" : "No products available"}
           </h2>
           <p className="muted mt-2">
-            Enter search criteria and click Search to view matching products.
+            {hasSearched
+              ? "Try changing the name, category, or price range."
+              : "There are currently no active products to display."}
           </p>
         </div>
       )}
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {products.map((product) => (
-          <ProductCard
-            key={product.productId}
-            p={product}
-          />
-        ))}
-      </div>
+      {!searching && !error && products.length > 0 && (
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {products.map((product) => (
+            <ProductCard key={product.productId} p={product} />
+          ))}
+        </div>
+      )}
     </>
   );
 }

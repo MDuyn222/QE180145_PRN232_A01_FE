@@ -1,9 +1,9 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { api, Category } from "@/lib/api";
+import { api, Category, Product } from "@/lib/api";
+import ProductCard from "@/components/ProductCard";
 import {
   ArrowRight,
   BadgeCheck,
@@ -16,29 +16,35 @@ import {
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadHomeData = async () => {
       try {
         setLoading(true);
         setError("");
 
-        const response = await api.get<Category[]>("/api/categories");
-        setCategories(response.data);
+        const [categoryResponse, productResponse] = await Promise.all([
+          api.get<Category[]>("/api/categories"),
+          api.get<Product[]>("/api/products"),
+        ]);
+
+        setCategories(categoryResponse.data);
+        setProducts(productResponse.data);
       } catch (err) {
-        console.error("Failed to load categories:", err);
-        setError(
-          "Không thể tải danh mục sản phẩm. Vui lòng kiểm tra backend."
-        );
+        console.error("Failed to load home data:", err);
+        setError("Không thể tải dữ liệu trang chủ. Vui lòng kiểm tra backend.");
       } finally {
         setLoading(false);
       }
     };
 
-    loadCategories();
+    loadHomeData();
   }, []);
+
+  const featuredProducts = products.slice(0, 6);
 
   return (
     <>
@@ -71,7 +77,7 @@ export default function Home() {
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               {[
-                { icon: BadgeCheck, label: "Active catalog", value: "Live" },
+                { icon: BadgeCheck, label: "Active products", value: products.length },
                 { icon: ShieldCheck, label: "JWT account flow", value: "Secure" },
                 { icon: ShoppingBag, label: "Order tracking", value: "Ready" },
               ].map((item) => {
@@ -111,8 +117,8 @@ export default function Home() {
                   <p className="mt-1 text-sm text-white/85">Categories</p>
                 </div>
                 <div className="rounded-2xl bg-white/20 p-4 backdrop-blur">
-                  <p className="text-3xl font-black">24/7</p>
-                  <p className="mt-1 text-sm text-white/85">Shopping access</p>
+                  <p className="text-3xl font-black">{products.length}</p>
+                  <p className="mt-1 text-sm text-white/85">Products</p>
                 </div>
               </div>
 
@@ -122,7 +128,7 @@ export default function Home() {
                   Shopping flow
                 </p>
                 <div className="mt-4 space-y-3">
-                  {["Pick a category", "View product details", "Checkout cart"].map(
+                  {["Browse products", "View product details", "Checkout cart"].map(
                     (label, index) => (
                       <div key={label} className="flex items-center gap-3">
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-teal-50 text-sm font-black text-teal-700">
@@ -139,14 +145,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section>
+      <section className="mb-12">
         <div className="page-header">
           <div>
-            <p className="eyebrow">Browse by category</p>
-            <h2 className="section-title mt-2">Product categories</h2>
+            <p className="eyebrow">Public product listing</p>
+            <h2 className="section-title mt-2">Available products</h2>
 
             <p className="muted mt-2">
-              Select a category to view its available products.
+              Visitors can browse active products without logging in.
             </p>
           </div>
 
@@ -158,14 +164,14 @@ export default function Home() {
 
         {loading && (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="card animate-pulse"
-              >
-                <div className="h-6 w-2/3 rounded bg-slate-200" />
-                <div className="mt-4 h-4 rounded bg-slate-200" />
-                <div className="mt-2 h-4 w-4/5 rounded bg-slate-200" />
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div key={item} className="card animate-pulse p-0">
+                <div className="aspect-[4/3] rounded-t-[1.4rem] bg-slate-200" />
+                <div className="p-5">
+                  <div className="h-5 w-3/4 rounded bg-slate-200" />
+                  <div className="mt-3 h-4 rounded bg-slate-200" />
+                  <div className="mt-6 h-6 w-1/2 rounded bg-slate-200" />
+                </div>
               </div>
             ))}
           </div>
@@ -173,8 +179,53 @@ export default function Home() {
 
         {!loading && error && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-700">
-            <p className="font-semibold">Unable to load categories</p>
+            <p className="font-semibold">Unable to load home data</p>
             <p className="mt-1 text-sm">{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && featuredProducts.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-slate-300 bg-white/80 p-10 text-center">
+            <h3 className="text-lg font-semibold text-slate-800">
+              No active products
+            </h3>
+
+            <p className="mt-2 text-slate-500">
+              There are currently no active products to display.
+            </p>
+          </div>
+        )}
+
+        {!loading && !error && featuredProducts.length > 0 && (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {featuredProducts.map((product) => (
+              <ProductCard key={product.productId} p={product} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="page-header">
+          <div>
+            <p className="eyebrow">Browse by category</p>
+            <h2 className="section-title mt-2">Product categories</h2>
+
+            <p className="muted mt-2">
+              Select a category to view its available products.
+            </p>
+          </div>
+        </div>
+
+        {loading && (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="card animate-pulse">
+                <div className="h-6 w-2/3 rounded bg-slate-200" />
+                <div className="mt-4 h-4 rounded bg-slate-200" />
+                <div className="mt-2 h-4 w-4/5 rounded bg-slate-200" />
+              </div>
+            ))}
           </div>
         )}
 
