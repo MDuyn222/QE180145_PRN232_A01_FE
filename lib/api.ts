@@ -12,6 +12,28 @@ api.interceptors.request.use((c) => {
   return c;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (typeof window !== "undefined") {
+      const status = error?.response?.status;
+      const isAuthPage =
+        window.location.pathname === "/login" ||
+        window.location.pathname === "/register" ||
+        window.location.pathname === "/admin/login";
+
+      if (status === 401 && !isAuthPage) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.dispatchEvent(new Event("storage"));
+        window.location.href = "/login";
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export type Category = {
   categoryId: number;
   categoryName: string;
@@ -81,8 +103,16 @@ export const money = (n: number) =>
 // Auth helpers
 export const getUser = (): UserInfo | null => {
   if (typeof window === "undefined") return null;
+
   const raw = localStorage.getItem("user");
-  return raw ? JSON.parse(raw) : null;
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as UserInfo;
+  } catch {
+    clearUser();
+    return null;
+  }
 };
 
 export const setUser = (u: UserInfo) => {
